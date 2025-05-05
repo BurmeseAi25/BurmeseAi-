@@ -1,0 +1,71 @@
+
+
+
+
+
+
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+from keras.utils import to_categorical
+
+# Dataset Load
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train = x_train.reshape(-1,28,28,1) / 255.0
+x_test = x_test.reshape(-1,28,28,1) / 255.0
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+# Model Build
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    MaxPooling2D((2,2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(10, activation='softmax')
+])
+
+# Model Compile
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Model Train
+model.fit(x_train, y_train, epochs=5, validation_data=(x_test, y_test))
+
+# Model Save
+model.save('model.h5')
+print("✅ Model Saved to model.h5")
+
+import streamlit as st
+from keras.models import load_model
+import numpy as np
+from tensorflow.keras.preprocessing import image
+
+# Load model
+model = load_model('model.h5')
+
+def predict(img):
+    img = img.resize((28, 28))
+    img = np.array(img.convert('L'))  # Convert image to grayscale
+    img = img.reshape(1, 28, 28, 1)
+    img = img / 255.0
+    prediction = model.predict(img)
+    return np.argmax(prediction)
+
+def main():
+    st.title("Handwritten Digit Recognition")
+    st.write("Upload an image of a handwritten digit")
+
+    uploaded_image = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
+    if uploaded_image is not None:
+        img = image.load_img(uploaded_image)
+        st.image(img, caption="Uploaded Image", use_column_width=True)
+        st.write("")
+        st.write("Classifying...")
+
+        prediction = predict(img)
+        st.write(f"Prediction: {prediction}")
+streamlit
+tensorflow
+keras
+numpy
+pillow
